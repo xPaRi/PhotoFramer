@@ -1,0 +1,36 @@
+# Výstupy buildu
+[Bb]in/
+[Oo]bj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+*.rsuser
+*.DotSettings.user
+.idea/
+
+# Testy
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+coverage*.xml
+*.coverage
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/packages/
+
+# Logy a dočasné soubory
+*.log
+*.tmp
+*.wpftmp
+*_wpftmp.csproj
+
+# Operační systém
+Thumbs.db
+Desktop.ini
+.DS_Store

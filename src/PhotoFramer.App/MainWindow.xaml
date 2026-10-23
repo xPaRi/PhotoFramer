@@ -1,0 +1,344 @@
+﻿<Window x:Class="PhotoFramer.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:PhotoFramer.App.Controls"
+        Title="{Binding WindowTitle}" Icon="Assets/PhotoFramer.ico" Width="1411" Height="1216" MinWidth="900" MinHeight="600"
+        AllowDrop="True" Drop="Window_Drop" PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <c:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+
+        <!-- Fluent šablona textových polí má velký padding; zmenšeno, vzhled tématu zůstává -->
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="MinHeight" Value="24" />
+        </Style>
+    </Window.Resources>
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+        <KeyBinding Gesture="F5" Command="{Binding ReloadCommand}" />
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding ReloadCommand}" />
+        <KeyBinding Gesture="Ctrl+Enter" Command="{Binding CropCommand}" />
+        <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteFromClipboardCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+C" Command="{Binding CopyToClipboardCommand}" />
+        <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+    </Window.InputBindings>
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+        <ToggleButton x:Name="MenuButton" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                      Content="&#x2630;" FontSize="16" Width="36" Height="28" Padding="0" ToolTip="Zobrazit / skrýt nastavení"
+                      IsChecked="{Binding Settings.SettingsOpen, Mode=TwoWay}" Checked="MenuButton_Toggled" Unchecked="MenuButton_Toggled" />
+        <Menu>
+            <MenuItem Header="_Soubor">
+                <MenuItem Header="_Otevřít…" InputGestureText="Ctrl+O" Command="{Binding OpenCommand}" />
+                <MenuItem Header="_Znovu načíst" InputGestureText="F5 / Ctrl+R" Command="{Binding ReloadCommand}" />
+                <Separator />
+                <MenuItem Header="O_řez" InputGestureText="Ctrl+Enter" Command="{Binding CropCommand}" />
+                <Separator />
+                <MenuItem Header="_Uložit" InputGestureText="Ctrl+S" Command="{Binding SaveCommand}" />
+                <MenuItem Header="Uložit _jako…" InputGestureText="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+                <Separator />
+                <MenuItem Header="Vložit ze _schránky" InputGestureText="Ctrl+V" Command="{Binding PasteFromClipboardCommand}" />
+                <MenuItem Header="Uložit do s_chránky" InputGestureText="Ctrl+Shift+C" Command="{Binding CopyToClipboardCommand}" />
+                <Separator />
+                <MenuItem Header="_Konec" InputGestureText="Alt+F4" Click="Exit_Click" />
+            </MenuItem>
+        </Menu>
+        </DockPanel>
+
+        <!-- stavový řádek jako ve VS: modrý, při práci oranžový -->
+        <Border DockPanel.Dock="Bottom" Padding="10,3">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#007ACC" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                            <Setter Property="Background" Value="#CA5100" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <DockPanel>
+                <ProgressBar DockPanel.Dock="Right" Width="120" Height="6" IsIndeterminate="True" Foreground="White" Background="#55FFFFFF" BorderThickness="0"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                <Button DockPanel.Dock="Right" Content="Zrušit" Margin="0,0,12,0" Padding="10,0" MinHeight="0" Height="20"
+                        Foreground="White" Background="#33FFFFFF" BorderBrush="#88FFFFFF"
+                        ToolTip="Přerušit probíhající krok (např. čekání na externí aplikaci)&#10;Esc"
+                        Command="{Binding CancelCommand}"
+                        Visibility="{Binding IsCancellable, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Text="{Binding Status}" Foreground="White" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- levá část: náhled + akce + log -->
+        <Grid Grid.Column="0" Margin="10,0,10,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Background="#FF303030" CornerRadius="3" Padding="12,0,12,12">
+                <Grid>
+                    <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowCrop}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                    <c:CropView x:Name="Crop" Source="{Binding PhotoImage}" CropRect="{Binding CropRect, Mode=TwoWay}"
+                                DoubleClickCommand="{Binding CropCommand}"
+                                Visibility="{Binding ShowCrop, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </Border>
+
+
+            <TextBox x:Name="LogBox" Grid.Row="1" Margin="0,10,0,0" Height="130" Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="11"
+                     Visibility="{Binding Settings.ShowLog, Converter={StaticResource BoolToVisibility}}"
+                     TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                     TextChanged="LogBox_TextChanged" />
+        </Grid>
+
+        <!-- pravá část: nastavení -->
+        <Border x:Name="SettingsHost" Grid.Column="1" Width="0" ClipToBounds="True">
+        <ScrollViewer Width="450" VerticalScrollBarVisibility="Visible" Margin="0,0,10,10">
+            <StackPanel Margin="0,0,14,0">
+                <GroupBox Header="Profil" Margin="0,0,0,10" Padding="6">
+                    <StackPanel>
+                        <Grid>
+                            <ComboBox ItemsSource="{Binding Settings.Profiles}" SelectedItem="{Binding ActiveProfile}" DisplayMemberPath="Name"
+                                      Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVisibility}}" />
+                            <TextBox x:Name="ProfileNameBox" Text="{Binding ActiveProfile.Name, UpdateSourceTrigger=PropertyChanged}"
+                                     Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVisibility}}"
+                                     IsVisibleChanged="ProfileNameBox_IsVisibleChanged" LostFocus="ProfileNameBox_LostFocus">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Return" Command="{Binding EndRenameCommand}" />
+                                    <KeyBinding Key="Escape" Command="{Binding EndRenameCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button ToolTip="Přejmenovat aktivní profil" Content="Přejmenovat" Padding="10,3" Margin="0,0,6,0" Command="{Binding RenameProfileCommand}"
+                                    Visibility="{Binding IsRenaming, Converter={StaticResource InverseBoolToVisibility}}" />
+                            <Button ToolTip="Vytvořit nový profil s výchozím nastavením" Content="Nový" Padding="10,3" Command="{Binding AddProfileCommand}" />
+                            <Button ToolTip="Vytvořit kopii aktivního profilu" Content="Duplikovat" Padding="10,3" Margin="6,0,0,0" Command="{Binding DuplicateProfileCommand}" />
+                            <Button ToolTip="Smazat aktivní profil (poslední profil smazat nelze)" Content="Smazat" Padding="10,3" Margin="6,0,0,0" Command="{Binding DeleteProfileCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Zpracování a výstup" Margin="0,0,0,10" Padding="6">
+                    <Grid DataContext="{Binding ActiveProfile}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Grid.Resources>
+                            <Style TargetType="FrameworkElement" x:Key="Row"><Setter Property="Margin" Value="0,3" /></Style>
+                        </Grid.Resources>
+
+                        <TextBlock Text="Velikost (px)" Style="{StaticResource FieldLabel}" />
+                        <TextBox c:InputFilter.Mode="Digits" MaxLength="5" Width="90" HorizontalAlignment="Left" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3" Text="{Binding TargetSize, UpdateSourceTrigger=PropertyChanged}" ToolTip="0 = nezmenšovat" />
+
+                        <CheckBox Grid.Row="1" Grid.ColumnSpan="3" Margin="0,3" Content="Upravit v externí aplikaci" IsChecked="{Binding NikEnabled}" />
+
+                        <TextBlock Grid.Row="2" Text="Externí aplikace" Style="{StaticResource FieldLabel}" IsEnabled="{Binding NikEnabled}" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Margin="0,3" IsEnabled="{Binding NikEnabled}"
+                                 Text="{Binding DataContext.Settings.NikExePath, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Cesta ke spustitelnému souboru externí aplikace (výchozí: Analog Efex Pro 2)" />
+                        <Button ToolTip="Vybrat spustitelný soubor externí aplikace" Grid.Row="2" Grid.Column="2" Content="…" Width="30" Height="24" Padding="0" Margin="4,3,0,3" IsEnabled="{Binding NikEnabled}"
+                                Command="{Binding DataContext.BrowseNikExeCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Foreground="#FFE0A030" TextWrapping="Wrap" Margin="0,0,0,3"
+                                   Text="{Binding DataContext.NikPathWarning, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.NikPathWarning, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <TextBlock Grid.Row="4" Text="Výstupní formát" Style="{StaticResource FieldLabel}" />
+                        <ComboBox Grid.Row="4" Grid.Column="1" Width="90" HorizontalAlignment="Left" Margin="0,3"
+                                  ItemsSource="{Binding DataContext.OutputFormats, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  DisplayMemberPath="Value" SelectedValuePath="Key" SelectedValue="{Binding OutputFormat}"
+                                  ToolTip="Formát uloženého souboru" />
+
+                        <TextBlock Grid.Row="5" Text="Kvalita JPEG (%)">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource FieldLabel}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OutputFormat}" Value="Png"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBox c:InputFilter.Mode="Digits" MaxLength="3" Width="90" HorizontalAlignment="Left" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3"
+                                 ToolTip="1–100, vyšší = lepší kvalita a větší soubor" Text="{Binding JpegQuality, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OutputFormat}" Value="Png"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="6" Text="Komprese PNG (0–9)">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource FieldLabel}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OutputFormat}" Value="Png"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBox c:InputFilter.Mode="Digits" MaxLength="1" Width="90" HorizontalAlignment="Left" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3"
+                                 ToolTip="PNG je bezeztrátové; úroveň komprese ovlivňuje jen velikost souboru a rychlost (0 = nejrychlejší, 9 = nejmenší soubor)"
+                                 Text="{Binding PngCompression, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OutputFormat}" Value="Png"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="7" Text="Výstupní složka" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Row="7" Grid.Column="1" Margin="0,3" Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" ToolTip="Prázdné = vedle originálu" />
+                        <Button ToolTip="Vybrat výstupní složku" Grid.Row="7" Grid.Column="2" Content="…" Width="30" Height="24" Padding="0" Margin="4,3,0,3"
+                                Command="{Binding DataContext.BrowseOutputFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+
+                        <TextBlock Grid.Row="8" Text="Přípona názvu" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Row="8" Grid.Column="1" Margin="0,3" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="Rámeček" Margin="0,0,0,10" Padding="6">
+                    <StackPanel DataContext="{Binding ActiveProfile}">
+                        <DockPanel Margin="0,0,0,6">
+                            <TextBlock Text="Pruh (px)" Style="{StaticResource FieldLabel}" Width="90" />
+                            <c:ColorBox DockPanel.Dock="Right" Hex="{Binding BorderColor, Mode=TwoWay}" />
+                            <TextBox c:InputFilter.Mode="Digits" MaxLength="4" Width="90" HorizontalAlignment="Left" Margin="0,0,8,0" Text="{Binding BorderWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <TextBlock Text="Čáry: vzdálenost od fotky · tloušťka · barva" Margin="0,4,0,2" Foreground="Gray" />
+                        <ItemsControl x:Name="LinesList" ItemsSource="{Binding Lines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox c:InputFilter.Mode="Digits" MaxLength="4" Width="90" Height="24" Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox c:InputFilter.Mode="Digits" MaxLength="4" Grid.Column="1" Width="90" Height="24" Margin="6,0,8,0" Text="{Binding Thickness, UpdateSourceTrigger=PropertyChanged}" />
+                                        <c:ColorBox Grid.Column="2" Hex="{Binding Color, Mode=TwoWay}" />
+                                        <Button ToolTip="Odstranit čáru" Grid.Column="3" Content="✕" Width="24" Height="24" Padding="0" Margin="6,0,0,0"
+                                                Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button ToolTip="Přidat další čáru rámečku" Content="Přidat čáru" HorizontalAlignment="Left" Padding="10,3" Margin="0,6,0,0"
+                                Command="{Binding DataContext.AddLineCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Podpis" Margin="0,0,0,10" Padding="6">
+                    <Grid DataContext="{Binding ActiveProfile.Signature}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <CheckBox Grid.ColumnSpan="3" Margin="0,3" Content="Zobrazit podpis" IsChecked="{Binding Enabled}" />
+
+                        <TextBlock Grid.Row="1" Text="Text" Style="{StaticResource FieldLabel}" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Grid.Row="2" Text="Font" Style="{StaticResource FieldLabel}" />
+                        <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3"
+                                  ItemsSource="{Binding DataContext.FontFamilies, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  SelectedItem="{Binding FontFamily}" />
+
+                        <TextBlock Grid.Row="3" Text="Velikost (px)" Style="{StaticResource FieldLabel}" />
+                        <TextBox c:InputFilter.Mode="Digits" MaxLength="3" Width="90" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3">
+                            <CheckBox Content="Tučné" IsChecked="{Binding Bold}" />
+                            <CheckBox Content="Kurzíva" IsChecked="{Binding Italic}" Margin="16,0,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="5" Text="Barva" Style="{StaticResource FieldLabel}" />
+                        <c:ColorBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3" HorizontalAlignment="Left" Hex="{Binding Color, Mode=TwoWay}" />
+
+                        <TextBlock Grid.Row="6" Text="Odsazení vpravo / dole" Style="{StaticResource FieldLabel}" />
+                        <Grid Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox c:InputFilter.Mode="Digits" MaxLength="4" Width="90" Text="{Binding MarginRight, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox c:InputFilter.Mode="Digits" MaxLength="4" Grid.Column="1" Width="90" Margin="6,0,0,0" Text="{Binding MarginBottom, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="Aplikace" Margin="0,0,0,10" Padding="6">
+                    <Grid DataContext="{Binding Settings}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <CheckBox Grid.ColumnSpan="3" Margin="0,3" IsChecked="{Binding CloseWhenDone}"
+                                  Content="Zavřít okno po uložení souboru z příkazové řádky" />
+
+                        <CheckBox Grid.Row="2" Grid.ColumnSpan="3" Margin="0,3" IsChecked="{Binding DarkMode}" Content="Tmavý režim" />
+
+                        <CheckBox Grid.Row="3" Grid.ColumnSpan="3" Margin="0,3" IsChecked="{Binding ShowLog}" Content="Zobrazit log" />
+
+                        <CheckBox Grid.Row="1" Grid.ColumnSpan="3" Margin="0,3" IsChecked="{Binding CopyToClipboardOnSave}" Content="Při uložení do souboru také uložit do schránky" />
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+        </Border>
+
+    </Grid>
+    </DockPanel>
+</Window>

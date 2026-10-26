@@ -147,7 +147,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
                         </Grid.RowDefinitions>
                         <Grid.Resources>
                             <Style TargetType="FrameworkElement" x:Key="Row"><Setter Property="Margin" Value="0,3" /></Style>
@@ -234,6 +234,9 @@
 
                         <TextBlock Grid.Row="8" Text="Přípona názvu" Style="{StaticResource FieldLabel}" />
                         <TextBox Grid.Row="8" Grid.Column="1" Margin="0,3" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <CheckBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,3" IsChecked="{Binding OverwriteWithoutAsking}" Content="Přepsat existující soubor bez ptaní"
+                                  ToolTip="Při uložení se nezeptá, i když soubor už existuje (včetně původní fotky, pokud je přípona prázdná)." />
                     </Grid>
                 </GroupBox>
 

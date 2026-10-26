@@ -136,12 +136,7 @@ public sealed class ImagePipeline
             : profile.OutputFolder;
         var name = Path.GetFileNameWithoutExtension(inputPath) + profile.Suffix;
         var extension = profile.OutputFormat == OutputFormat.Png ? ".png" : ".jpg";
-        var output = Path.Combine(folder, name + extension);
-
-        // nikdy nepřepsat originál
-        if (string.Equals(output, Path.GetFullPath(inputPath), StringComparison.OrdinalIgnoreCase))
-            output = Path.Combine(folder, name + "_framed" + extension);
-        return output;
+        return Path.Combine(folder, name + extension);
     }
 
     private static T? Take<T>(ref T? value) where T : class

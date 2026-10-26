@@ -6,7 +6,7 @@
         <Grid x:Name="Host" SizeChanged="Host_SizeChanged">
             <Canvas x:Name="Surface" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Black"
                     MouseLeftButtonDown="Surface_MouseDown" MouseMove="Surface_MouseMove"
-                    MouseLeftButtonUp="Surface_MouseUp" MouseWheel="Surface_MouseWheel">
+                    MouseLeftButtonUp="Surface_MouseUp" MouseRightButtonUp="Surface_RightClick" MouseWheel="Surface_MouseWheel">
                 <Image x:Name="Photo" Stretch="Fill" IsHitTestVisible="False" />
                 <Path x:Name="Dim" Fill="#99000000" IsHitTestVisible="False" />
                 <Rectangle x:Name="Frame" Stroke="White" StrokeThickness="1.5" IsHitTestVisible="False" />

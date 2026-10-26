@@ -59,5 +59,8 @@ public partial class Profile : ObservableObject
     [ObservableProperty] private string _outputFolder = "";
     [ObservableProperty] private string _suffix = "_frame";
 
+    /// <summary>Při ukládání přepsat existující soubor (i originál) bez dotazu.</summary>
+    [ObservableProperty] private bool _overwriteWithoutAsking;
+
     public override string ToString() => Name;
 }

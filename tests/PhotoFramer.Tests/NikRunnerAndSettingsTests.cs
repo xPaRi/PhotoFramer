@@ -157,10 +157,11 @@ public class NikRunnerAndSettingsTests : IDisposable
     }
 
     [Fact]
-    public void OutputPath_NeverOverwritesOriginal()
+    public void OutputPath_EmptySuffix_IsNotFilledIn()
     {
         var profile = new Profile { Suffix = "", OutputFolder = "" };
         var input = Path.Combine(_dir, "a.jpg");
-        Assert.EndsWith("a_framed.jpg", ImagePipeline.GetOutputPath(input, profile));
+        Assert.Equal(input, ImagePipeline.GetOutputPath(input, profile));
+        Assert.Equal(Path.Combine(_dir, "a.png"), ImagePipeline.GetOutputPath(input, new Profile { Suffix = "", OutputFormat = OutputFormat.Png }));
     }
 }

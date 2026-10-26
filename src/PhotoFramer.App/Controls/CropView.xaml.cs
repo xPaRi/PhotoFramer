@@ -143,6 +143,14 @@ public partial class CropView : UserControl
             Surface.CaptureMouse();
     }
 
+    /// <summary>Pravé tlačítko myši spustí stejnou akci jako dvojklik (zvyk ze Zoner Photo Studia).</summary>
+    private void Surface_RightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DoubleClickCommand?.CanExecute(null) == true)
+            DoubleClickCommand.Execute(null);
+        e.Handled = true;
+    }
+
     private void Surface_MouseUp(object sender, MouseButtonEventArgs e)
     {
         _drag = Drag.None;

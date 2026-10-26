@@ -428,19 +428,34 @@ public partial class MainViewModel : ObservableObject
         var dialog = new SaveFileDialog
         {
             Title = "Uložit jako",
+            OverwritePrompt = !ActiveProfile.OverwriteWithoutAsking,
             Filter = ActiveProfile.OutputFormat == OutputFormat.Png ? "PNG|*.png" : "JPEG|*.jpg",
             DefaultExt = ActiveProfile.OutputFormat == OutputFormat.Png ? ".png" : ".jpg",
             InitialDirectory = Path.GetDirectoryName(suggested),
             FileName = Path.GetFileName(suggested),
         };
         if (dialog.ShowDialog() == true)
-            SaveTo(dialog.FileName);
+            SaveTo(dialog.FileName, confirmOverwrite: false); // dialog se na přepsání zeptal sám
     }
 
     private bool CanSave() => IsCropped && !IsBusy;
 
-    private void SaveTo(string path)
+    private void SaveTo(string path, bool confirmOverwrite = true)
     {
+        if (confirmOverwrite && !ActiveProfile.OverwriteWithoutAsking && File.Exists(path))
+        {
+            var isOriginal = CurrentPath is not null
+                && string.Equals(Path.GetFullPath(path), Path.GetFullPath(CurrentPath), StringComparison.OrdinalIgnoreCase);
+            var question = isOriginal
+                ? $"Soubor „{Path.GetFileName(path)}“ je původní fotka. Opravdu ji přepsat?"
+                : $"Soubor „{Path.GetFileName(path)}“ už existuje. Přepsat?";
+            if (MessageBox.Show(question, "Přepsat soubor", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            {
+                Status = "Uložení zrušeno.";
+                return;
+            }
+        }
+
         try
         {
             new ImagePipeline(null, _log).SaveFramed(_edited!, ActiveProfile, path);

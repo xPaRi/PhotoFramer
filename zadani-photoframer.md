@@ -41,7 +41,7 @@ Cesta k externí aplikaci je v nastavení (sekce Zpracování a výstup) a je p�
 
 1. **Soubor → Otevřít…** (Ctrl+O), přetažení souboru do okna, **Vložit ze schránky** (Ctrl+V) nebo parametr příkazové řádky (např. z Total Commanderu) načte libovolnou fotku (JPEG, TIFF, PNG) do hlavního okna. Ze schránky lze vložit obrázek, nebo první zkopírovaný soubor.
 2. Ruční **čtvercový výřez** přímo ve fotce: tažením se posouvá, rohy nebo kolečkem myši se mění velikost, zobrazuje se rozměr výřezu. Klávesy: šipky posouvají o 1 px, numerické `+` / `−` mění velikost o 1 px, s Shiftem je krok 20 px. Klik do ořezu přebere klávesnici z textového pole.
-3. **Soubor → Ořez** (Ctrl+Enter, nebo dvojklik v okně ořezu): ořízne, zmenší na cílovou velikost a (je-li zapnuto) otevře externí aplikaci. Pokud uživatel zavře externí aplikaci bez uložení, zůstává u ořezu.
+3. **Soubor → Ořez** (Ctrl+Enter, dvojklik nebo pravé tlačítko myši v okně ořezu): ořízne, zmenší na cílovou velikost a (je-li zapnuto) otevře externí aplikaci. Pokud uživatel zavře externí aplikaci bez uložení, zůstává u ořezu.
 4. Po ořezu se fotka zobrazuje **rovnou s rámečkem a podpisem** a obraz se překresluje při každé změně nastavení rámečku a podpisu.
 5. **Uložit** (Ctrl+S) uloží soubor podle preferencí profilu (formát, výstupní složka, přípona názvu; originál se nikdy nepřepíše). **Uložit jako…** (Ctrl+Shift+S) otevře dialog pro volbu názvu a umístění.
 6. **Uložit do schránky** (Ctrl+Shift+C) zkopíruje hotový obrázek s rámečkem a podpisem. Volba „Při uložení do souboru také uložit do schránky“ dělá obojí najednou.

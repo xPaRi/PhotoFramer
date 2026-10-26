@@ -45,7 +45,7 @@ The result is `publish\PhotoFramer.exe`. The script can also copy the EXE to a f
 ## Usage
 
 1. **File → Open** (Ctrl+O), drag a file into the window, **Paste from clipboard** (Ctrl+V), or pass a file path on the command line.
-2. Adjust the crop rectangle and click **Crop** (Ctrl+Enter or double-click in the crop view).
+2. Adjust the crop rectangle and click **Crop** (Ctrl+Enter, double-click or right-click in the crop view).
 3. Fine-tune the frame and signature (settings panel behind the ☰ button).
 4. **Save** (Ctrl+S) saves using the profile settings, **Save as…** (Ctrl+Shift+S) opens a dialog, **Save to clipboard** (Ctrl+Shift+C) copies the image.
 5. **Reload** (F5, Ctrl+R) restores the original file for a new crop.
@@ -146,7 +146,7 @@ Výsledek je `publish\PhotoFramer.exe`. Skript umí EXE zkopírovat i do složky
 ## Použití
 
 1. **Soubor → Otevřít** (Ctrl+O), přetažení souboru do okna, **Vložit ze schránky** (Ctrl+V), nebo cesta k souboru jako parametr příkazové řádky.
-2. Upravte výřez a klikněte na **Ořez** (Ctrl+Enter nebo dvojklik v okně ořezu).
+2. Upravte výřez a klikněte na **Ořez** (Ctrl+Enter, dvojklik nebo pravé tlačítko myši v okně ořezu).
 3. Doladte rámeček a podpis (panel nastavení pod tlačítkem ☰).
 4. **Uložit** (Ctrl+S) uloží podle profilu, **Uložit jako…** (Ctrl+Shift+S) otevře dialog, **Uložit do schránky** (Ctrl+Shift+C) zkopíruje obrázek.
 5. **Znovu načíst** (F5, Ctrl+R) vrátí původní soubor k novému ořezu.

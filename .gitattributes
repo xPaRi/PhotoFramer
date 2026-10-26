@@ -1,0 +1,7 @@
+# Konce řádků: Git je normalizuje, v pracovní složce podle systému
+* text=auto
+
+# Binární soubory
+*.jpg binary
+*.png binary
+*.ico binary
